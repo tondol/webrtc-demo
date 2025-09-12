@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Camera Stream</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>WebRTC Camera Stream Demo</h1>
+        
+        <div class="status" id="status">接続待機中...</div>
+        
+        <video id="remoteVideo" autoplay muted></video>
+        
+        <div class="controls">
+            <button id="connectBtn">接続</button>
+            <button id="disconnectBtn" disabled>切断</button>
+        </div>
+        
+        <div class="debug" id="debugLog">デバッグログ:<br></div>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            <p><strong>説明:</strong> 「接続」ボタンをクリックして、サーバーのカメラ映像を受信します。</p>
+            <p><strong>注意:</strong> サーバー側でカメラへのアクセス許可が必要です。</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
