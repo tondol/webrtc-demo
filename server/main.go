@@ -260,16 +260,12 @@ func streamFFmpegTestPattern(track *webrtc.TrackLocalStaticSample, connInfo *Con
 		"-f", "lavfi",
 		"-i", "testsrc=size=640x480:rate=10",
 		"-vcodec", "libvpx",
-		"-cpu-used", "16",
 		"-deadline", "realtime",
-		"-g", "10",
-		"-error-resilient", "1",
-		"-lag-in-frames", "0",
 		"-f", "ivf",
 		"-",
 	}
 
-	streamFFmpeg(track, connInfo, "test pattern", args, 100*time.Millisecond)
+	streamFFmpeg(track, connInfo, "test pattern", args, time.Second/10)
 }
 
 func streamCameraVP8(track *webrtc.TrackLocalStaticSample, connInfo *ConnectionInfo) {
@@ -284,13 +280,8 @@ func streamCameraVP8(track *webrtc.TrackLocalStaticSample, connInfo *ConnectionI
 
 		// エンコード設定
 		"-vcodec", "libvpx",
-		"-b:v", "800k", // ビットレート800kbps, 1000kだと出力されなくなる(謎)
-		"-cpu-used", "8", // エンコード速度と品質のバランス
+		"-b:v", "1000k",
 		"-deadline", "realtime",
-		"-g", "60", // キーフレーム間隔を増加 (品質向上)
-		"-error-resilient", "1",
-		"-lag-in-frames", "0",
-		"-auto-alt-ref", "0", // リアルタイム用設定
 		"-f", "ivf",
 		"-",
 	}
@@ -351,14 +342,20 @@ func streamFFmpeg(track *webrtc.TrackLocalStaticSample, connInfo *ConnectionInfo
 		frameSize := uint32(frameHeader[0]) | uint32(frameHeader[1])<<8 |
 			uint32(frameHeader[2])<<16 | uint32(frameHeader[3])<<24
 
-		if frameSize > 100000 {
+		if frameSize > 10_000_000 { // 10MB以下を期待
 			continue
 		}
 
 		// フレームデータ読み取り
+		// 1回で65536バイト以上読めないため複数回readする
 		frameData := make([]byte, frameSize)
-		if n, err := stdout.Read(frameData); err != nil || uint32(n) != frameSize {
-			break
+		n := 0
+		for n < int(frameSize) {
+			m, err := stdout.Read(frameData[n:])
+			if err != nil {
+				break
+			}
+			n += m
 		}
 
 		// フレーム送信
